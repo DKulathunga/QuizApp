@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React from 'react';
 import './styles/Results.css';
 import { Link } from 'react-router-dom';
 
