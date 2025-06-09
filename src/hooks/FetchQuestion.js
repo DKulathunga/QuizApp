@@ -9,31 +9,42 @@ import * as Action from '../redux/question_reducer'
 export const useFetchQuestion = () => {
     const dispatch = useDispatch();   
     const [getData, setGetData] = useState({ isLoading : false, apiData : [], serverError: null});
+   
+
 
     useEffect(() => {
-        setGetData(prev => ({...prev, isLoading : true}));
+  setGetData(prev => ({ ...prev, isLoading: true }));
 
-        /** async function fetch backend data */
-        (async () => {
-            try {
-                const [{ questions, answers }] = await getServerData(`${process.env.REACT_APP_SERVER_HOSTNAME}/api/questions`, (data) => data)
-                
-                if(questions.length > 0){
-                    setGetData(prev => ({...prev, isLoading : false}));
-                    setGetData(prev => ({...prev, apiData : questions}));
+  (async () => {
+    try {
+      const data = await getServerData(
+        `${process.env.REACT_APP_SERVER_HOSTNAME}/api/questions`,
+        (data) => data
+      );
 
-                    /** dispatch an action */
-                    dispatch(Action.startExamAction({ question : questions, answers }))
+      console.log("Fetched data:", data);
 
-                } else{
-                    throw new Error("No Question Avalibale");
-                }
-            } catch (error) {
-                setGetData(prev => ({...prev, isLoading : false}));
-                setGetData(prev => ({...prev, serverError : error}));
-            }
-        })();
-    }, [dispatch]);
+      const { questions, answers } = data;
+
+      if (Array.isArray(questions) && questions.length > 0) {
+        setGetData(prev => ({
+          ...prev,
+          isLoading: false,
+          apiData: questions,
+        }));
+
+        // FIX: Use correct property name and provide answers array
+        dispatch(Action.startExamAction({ questions, answers: [] }));
+      } else {
+        throw new Error("No questions available in response");
+      }
+    } catch (error) {
+      setGetData(prev => ({ ...prev, isLoading: false, serverError: error }));
+      console.error("Error fetching questions:", error);
+    }
+  })();
+}, [dispatch]);
+
 
     return [getData, setGetData];
 }
